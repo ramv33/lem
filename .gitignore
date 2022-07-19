@@ -2,3 +2,5 @@ __pycache__/
 outfile
 nums
 question*
+*.txt
+*.tmp
