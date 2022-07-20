@@ -40,15 +40,25 @@ def send_file(sock, file):
         print(f'sent {sock.send(buf)} bytes')
         buf = f.read(myconstants.BUFFSIZE)
     print(f'hash: {digest.hexdigest()}')
+    return digest.hexdigest()
 
-def send_questions(order, port, qdir, verbose=False):
+def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False):
+    try:
+        logfd = open(logfile, 'a')
+        print('opened', logfile)
+    except Exception as arg:
+        print("error opening'", logfile, ":", arg)
+        sys.exit(2)
+
     for i in order.keys():
         try:
             s = connect_server(i, port)
             print(f'connected to {i}:{port}')
             qpath = os.path.join(qdir, order[i])
             print('\tsending file', qpath)
-            send_file(s, qpath)
+            filesig = send_file(s, qpath)
+            # todo: write log as a csv file
+            logfd.write(f'IP: {i} question: {order[i]} hash: {filesig}')
             s.close()
             print('closed connection')
         except:
@@ -88,7 +98,7 @@ def main():
 
     assignments = assign_questions(iplist, questions)
 
-    send_questions(assignments, args.port, args.questions_dir, args.verbose)
+    send_questions(assignments, args.port, args.questions_dir, verbose=args.verbose)
 
 if __name__ == '__main__':
     main()
