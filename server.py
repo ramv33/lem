@@ -6,8 +6,7 @@ import socket
 from threading import Thread
 from PySide6 import QtCore, QtWidgets, QtGui
 
-PORT = 1234
-BUFFSIZE = 4096
+import myconstants
 
 class MyWidget(QtWidgets.QWidget):
 
@@ -63,7 +62,7 @@ class DownloadThread(QtCore.QThread):
         self.signals.signal_file.connect(parent.update_text)
         print('connected')
 
-        self.port = PORT
+        self.port = myconstants.PORT
         self.file = file    # File to save question in
         self.start()
 
@@ -88,11 +87,11 @@ class DownloadThread(QtCore.QThread):
         print('socket created:', self.sock)
 
     def recvfile(self, clientsock):
-        buf = clientsock.recv(BUFFSIZE)
+        buf = clientsock.recv(myconstants.BUFFSIZE)
         ret = buf
         while len(buf) != 0:
             print(f'received {len(buf)} bytes')
-            buf = clientsock.recv(BUFFSIZE)
+            buf = clientsock.recv(myconstants.BUFFSIZE)
             ret += buf
         print('connection closed')
         return ret
