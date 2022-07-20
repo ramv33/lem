@@ -41,8 +41,8 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def savefile(self):
-        print('writing hello')
-        f = open('hello.txt', 'ab+')
+        print("writing 'question.txt'")
+        f = open('question.txt', 'ab+')
         f.write(self.text.toPlainText().encode('utf-8'))
         f.write(b'\n')
 
