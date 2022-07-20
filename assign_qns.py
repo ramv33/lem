@@ -61,6 +61,7 @@ def assign_questions(ips, qns):
 
 def argparser():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', help='destination port', default=3000)
     parser.add_argument('-l', '--list',
                         help='filename listing the IPs/hostnames in order', required=True)
     parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
@@ -81,6 +82,7 @@ def argparser():
     if args.verbose:
         print('[-] reading IPs/hostname from file:', args.list)
         print('[-] questions directory:', args.questions_dir)
+        print('[-] destination port:', args.port)
 
     return args
 
