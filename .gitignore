@@ -1,8 +1,7 @@
+iplist
 __pycache__/
 outfile
 nums
 question*
 *.txt
 *.tmp
-iplist
-iplist
