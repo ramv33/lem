@@ -17,6 +17,7 @@ class MyWidget(QtWidgets.QWidget):
         self.button_sav = QtWidgets.QPushButton('Save File')
         self.text = QtWidgets.QTextEdit('Hello world!')
         self.text.setReadOnly(True)
+        self.filename = myconstants.QUESTION_FILE
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.text)
@@ -41,8 +42,8 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def savefile(self):
-        print("writing 'question.txt'")
-        f = open('question.txt', 'ab+')
+        print(f'writing {self.filename}')
+        f = open(self.filename, 'ab+')
         f.write(self.text.toPlainText().encode('utf-8'))
         f.write(b'\n')
 
