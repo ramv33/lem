@@ -4,8 +4,18 @@ import os
 import sys
 import socket
 import hashlib
+import argparse
 
-BUFFSIZE = 4096
+from assign_qns import *
+import myconstants
+
+def printerr(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def getips(iplist):
+    f = open(iplist, 'r')
+    iplst = [ip.strip() for ip in f.readlines()]
+    return iplst
 
 def connect_server(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -24,21 +34,61 @@ def send_file(sock, file):
     f = open(file, 'rb')
     print(f'sending file {file}')
     digest = hashlib.sha256()
-    buf = f.read(BUFFSIZE)
+    buf = f.read(myconstants.BUFFSIZE)
     while len(buf) != 0:
         digest.update(buf)
         print(f'sent {sock.send(buf)} bytes')
-        buf = f.read(BUFFSIZE)
+        buf = f.read(myconstants.BUFFSIZE)
     print(f'hash: {digest.hexdigest()}')
 
-def main():
-    if len(sys.argv) < 4:
-        print(f'usage: {sys.argv[0]} ip port file')
-        exit(1)
+def send_questions(order, port, qdir, verbose=False):
+    for i in order.keys():
+        try:
+            s = connect_server(i, port)
+            print(f'connected to {i}:{port}')
+            qpath = os.path.join(qdir, order[i])
+            print('\tsending file', qpath)
+            send_file(s, qpath)
+            s.close()
+            print('closed connection')
+        except:
+            printerr(f'connection to {i}:{port} failed')
 
-    s = connect_server(sys.argv[1], int(sys.argv[2]))
-    send_file(s, sys.argv[3])
-    s.close()
+def argparser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p', '--port', help='destination port', default=myconstants.PORT)
+    parser.add_argument('-l', '--list',
+                        help='filename listing the IPs/hostnames in order', required=True)
+    parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
+    parser.add_argument('-q', '--questions-dir',
+                        help='directory which contains the question files', required=True)
+    args = parser.parse_args()
+
+    if not os.access(args.list, os.R_OK):
+        printerr('cannot access list file', args.list)
+        sys.exit(1)
+    if not os.access(args.questions_dir, os.R_OK):
+        printerr('cannot access questions directory:', args.questions_dir)
+        sys.exit(1)
+    if not os.path.isdir(args.questions_dir):
+        printerr(args.questions_dir, 'is not a directory')
+        sys.exit(1)
+
+    if args.verbose:
+        print('[-] reading IPs/hostname from file:', args.list)
+        print('[-] questions directory:', args.questions_dir)
+        print('[-] destination port:', args.port)
+
+    return args
+
+def main():
+    args = argparser()
+    iplist = getips(args.list)
+    questions = os.listdir(args.questions_dir)
+
+    assignments = assign_questions(iplist, questions)
+
+    send_questions(assignments, args.port, args.questions_dir, args.verbose)
 
 if __name__ == '__main__':
     main()
