@@ -2,9 +2,11 @@
 
 import os
 import sys
+import time
 import socket
 import hashlib
 import argparse
+import pandas as pd
 
 from assign_qns import *
 import myconstants
@@ -26,6 +28,38 @@ def connect_server(ip, port):
     m.update(buf)
     return m.hexdigest()
 
+'''
+	logwrite writes a csv file with following fields
+        0. system time
+        1. ip/system: ip address/system name
+        2. question_head: first line of question from question file
+        3. question filename
+        4. question file hash
+'''
+def logwrite(logfile, logdict):
+    try:
+        print('writing log')
+        qnfp = open(logdict['qpath'], 'r')
+        log = {
+            'Time': [time.strftime(myconstants.TIMEFMT)],
+            'System': [logdict['sys']],
+            'Question No': [logdict['q']],
+            'Question Head': [qnfp.readline().strip()],
+            'Hash': [logdict['hash']]
+        }
+        print(log)
+        df = pd.DataFrame(log)
+        print('logfile:', logfile)
+        f = open(logfile, 'a')
+        size = f.tell()
+        f.close()
+        df.to_csv(logfile, mode='a', index=False, header=(size == 0))
+        #logfd.write(f"IP: {logdict['system']} question: {logdict['q']} "
+        #            f"question_head: {qnfp.readline().strip()} "
+        #            f"hash: {logdict['hash']}\n")
+    except Exception as arg:
+        print('exception writing log:', arg)
+
 def send_file(sock, file):
     if not os.path.isfile(file):
         print(f'{file} is not a file')
@@ -45,7 +79,7 @@ def send_file(sock, file):
 def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False):
     try:
         logfd = open(logfile, 'a')
-        print('opened', logfile)
+        logfd.close()
     except Exception as arg:
         print("error opening'", logfile, ":", arg)
         sys.exit(2)
@@ -58,7 +92,8 @@ def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False
             print('\tsending file', qpath)
             filesig = send_file(s, qpath)
             # todo: write log as a csv file
-            logfd.write(f'IP: {i} question: {order[i]} hash: {filesig}')
+            logdict = {'sys': i, 'q': order[i], 'hash': filesig, 'qpath': qpath}
+            logwrite(logfile, logdict)
             s.close()
             print('closed connection')
         except:
@@ -72,6 +107,9 @@ def argparser():
     parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
     parser.add_argument('-q', '--questions-dir',
                         help='directory which contains the question files', required=True)
+    parser.add_argument('-L', '--logfile',
+                        help='file to save logs (questions sent to system) to',
+                        default=myconstants.LOGFILE)
     args = parser.parse_args()
 
     if not os.access(args.list, os.R_OK):
@@ -88,6 +126,7 @@ def argparser():
         print('[-] reading IPs/hostname from file:', args.list)
         print('[-] questions directory:', args.questions_dir)
         print('[-] destination port:', args.port)
+        print('[-] log file:', args.logfile)
 
     return args
 
@@ -98,7 +137,8 @@ def main():
 
     assignments = assign_questions(iplist, questions)
 
-    send_questions(assignments, args.port, args.questions_dir, verbose=args.verbose)
+    send_questions(assignments, args.port, args.questions_dir,
+                   logfile=args.logfile, verbose=args.verbose)
 
 if __name__ == '__main__':
     main()
