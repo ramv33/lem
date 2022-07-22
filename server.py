@@ -14,18 +14,18 @@ class MyWidget(QtWidgets.QWidget):
         super(MyWidget, self).__init__(parent)
 
         self.button_clr = QtWidgets.QPushButton('Clear Text')
-        self.button_sav = QtWidgets.QPushButton('Save File')
+        self.button_save = QtWidgets.QPushButton('Save File')
+
         self.text = QtWidgets.QTextEdit('Hello world!')
         self.text.setReadOnly(True)
-        self.filename = myconstants.QUESTION_FILE
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.text)
         self.layout.addWidget(self.button_clr)
-        self.layout.addWidget(self.button_sav)
+        self.layout.addWidget(self.button_save)
 
         self.button_clr.clicked.connect(self.clear)
-        self.button_sav.clicked.connect(self.savefile)
+        self.button_save.clicked.connect(self.savefile)
 
         print('creating thread')
         self.thread = DownloadThread(self)
@@ -42,8 +42,10 @@ class MyWidget(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def savefile(self):
-        print(f'writing {self.filename}')
-        f = open(self.filename, 'ab+')
+        ret = QtWidgets.QFileDialog.getSaveFileName(self, 'Select Directory')
+        filename = ret[0]
+        print(f'writing {filename}')
+        f = open(filename, 'ab+')
         f.write(self.text.toPlainText().encode('utf-8'))
         f.write(b'\n')
 
