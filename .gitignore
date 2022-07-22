@@ -5,4 +5,4 @@ nums
 question*
 *.txt
 *.tmp
-[a-z].py # for testing stuff
+[a-z].py
