@@ -6,3 +6,4 @@ question*
 *.txt
 *.tmp
 [a-z].py
+*.csv
