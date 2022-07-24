@@ -61,6 +61,7 @@ class MyWidget(QtWidgets.QWidget):
             self.text.append('Starting\n'
                              '========')
     def proc_finished(self):
+        self.p = None   # so that check in runclient succeeds
         self.text.append('\n========\n'
                          'Finished')
 
