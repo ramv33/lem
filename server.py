@@ -16,7 +16,7 @@ class MyWidget(QtWidgets.QWidget):
         self.button_clr = QtWidgets.QPushButton('Clear Text')
         self.button_save = QtWidgets.QPushButton('Save File')
 
-        self.text = QtWidgets.QTextEdit('Hello world!')
+        self.text = QtWidgets.QTextEdit('Your question will appear here...')
         self.text.setReadOnly(True)
 
         self.layout = QtWidgets.QVBoxLayout(self)
