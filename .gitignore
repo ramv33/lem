@@ -7,3 +7,5 @@ question*
 *.tmp
 [a-z].py
 *.csv
+qns/
+q*/
