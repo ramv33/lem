@@ -13,7 +13,6 @@ class MyWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(MyWidget, self).__init__(parent)
 
-        self.button_clr = QtWidgets.QPushButton('Clear Text')
         self.button_save = QtWidgets.QPushButton('Save File')
 
         self.text = QtWidgets.QTextEdit('Your question will appear here...')
@@ -21,10 +20,8 @@ class MyWidget(QtWidgets.QWidget):
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.text)
-        self.layout.addWidget(self.button_clr)
         self.layout.addWidget(self.button_save)
 
-        self.button_clr.clicked.connect(self.clear)
         self.button_save.clicked.connect(self.savefile)
 
         print('creating thread')
@@ -71,7 +68,6 @@ class DownloadThread(QtCore.QThread):
 
     def run(self):
         self.start_server()
-        self.signals.signal_file.emit('BITCH')
 
     def start_server(self):
         self.create_socket(self.port)
@@ -84,10 +80,14 @@ class DownloadThread(QtCore.QThread):
             print('emitted contents: ', contents)
 
     def create_socket(self, port):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.bind(('', self.port))
-        self.sock.listen(1)
-        print('socket created:', self.sock)
+        try:
+            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.sock.bind(('', self.port))
+            self.sock.listen(1)
+            print('socket created:', self.sock)
+        except Exception as arg:
+            print(f'error creating socket: {arg}\nexiting...')
+            sys.exit(1)
 
     def recvfile(self, clientsock):
         buf = clientsock.recv(myconstants.BUFFSIZE)
