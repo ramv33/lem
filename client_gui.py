@@ -107,7 +107,7 @@ class MyWidget(QtWidgets.QWidget):
 def main():
     app = QtWidgets.QApplication([])
     widget = MyWidget()
-    widget.resize(350, 350)
+    widget.resize(600, 600)
     widget.show()
     app.exec()
 
