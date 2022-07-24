@@ -4,11 +4,14 @@ import os
 import sys
 import time
 import socket
+from socket import gethostbyname
 import hashlib
 import argparse
 import pandas as pd
+import pymongo
 
 from assign_qns import *
+from getname import *
 import myconstants
 
 def printerr(*args, **kwargs):
@@ -36,11 +39,16 @@ def connect_server(ip, port):
         3. question filename
         4. question file hash
 '''
-def logwrite(logfile, logdict):
+def logwrite(logfile, logdict, conn):
+    dbname = myconstants.DBNAME
+    collname = myconstants.COLLECTION_NAME
     try:
         qnfp = open(logdict['qpath'], 'r')
         log = {
             'Time': [time.strftime(myconstants.TIMEFMT)],
+            # if system list was given as domain names, we need to do DNS lookup
+            'Name': getname_from_ip(conn, dbname, collname,
+                                    {'IP': gethostbyname(logdict['sys']), 'Exit_time': ''}),
             'System': [logdict['sys']],
             'Question No': [logdict['q']],
             'Question Head': [qnfp.readline().strip()],
@@ -73,7 +81,16 @@ def send_file(sock, file):
     print(f'\thash: {digest.hexdigest()}', flush=True)
     return digest.hexdigest()
 
-def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False):
+def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False,
+                   mongo_url=myconstants.MONGO_URL):
+    # connect to mongodb to get student name from IP
+    conn = None
+    try:
+        conn = pymongo.MongoClient(mongo_url)
+        print('[-] connected to mongodb')
+    except Exception as arg:
+        printerr(f'[*] error connecting to database: {mongo_url}:', arg)
+
     try:
         logfd = open(logfile, 'a')
         logfd.close()
@@ -89,7 +106,7 @@ def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False
             filesig = send_file(s, qpath)
             # todo: write log as a csv file
             logdict = {'sys': i, 'q': order[i], 'hash': filesig, 'qpath': qpath}
-            logwrite(logfile, logdict)
+            logwrite(logfile, logdict, conn)
             s.close()
         except:
             printerr(f'[*] connection to {i}:{port} failed')
