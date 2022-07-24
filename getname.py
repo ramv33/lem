@@ -12,7 +12,8 @@ def getname_from_ip(conn, dbname, collname, filter_, name='Name'):
     return res['Name']
     
 def main():
-    conn = pymongo.MongoClient('mongodb://127.0.0.1:27017/')
+    conn = pymongo.MongoClient('mongodb://127.0.0.1:27017/',
+                               serverSelectionTimeoutMS=3000)
     print(getname_from_ip(conn, 'LMS', 'info', {'IP': '192.168.0.7'}, 'Name'))
 
 if __name__ == '__main__':
