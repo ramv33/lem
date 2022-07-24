@@ -44,16 +44,29 @@ def logwrite(logfile, logdict, conn):
     collname = myconstants.COLLECTION_NAME
     try:
         qnfp = open(logdict['qpath'], 'r')
-        log = {
-            'Time': [time.strftime(myconstants.TIMEFMT)],
-            # if system list was given as domain names, we need to do DNS lookup
-            'Name': getname_from_ip(conn, dbname, collname,
-                                    {'IP': gethostbyname(logdict['sys']), 'Exit_time': ''}),
-            'System': [logdict['sys']],
-            'Question No': [logdict['q']],
-            'Question Head': [qnfp.readline().strip()],
-            'Hash': [logdict['hash']]
-        }
+        log = {}
+        if conn is not None:
+            log = {
+                'Time': [time.strftime(myconstants.TIMEFMT)],
+                # if system list was given as domain names, we need to do DNS lookup
+                'Name': getname_from_ip(conn, dbname, collname,
+                                        {'IP': gethostbyname(logdict['sys']), 'Exit_time': ''}),
+                'System': [logdict['sys']],
+                'Question No': [logdict['q']],
+                'Question Head': [qnfp.readline().strip()],
+                'Hash': [logdict['hash']]
+            }
+        else:
+            log = {
+                'Time': [time.strftime(myconstants.TIMEFMT)],
+                # if system list was given as domain names, we need to do DNS lookup
+                'Name': '',
+                'System': [logdict['sys']],
+                'Question No': [logdict['q']],
+                'Question Head': [qnfp.readline().strip()],
+                'Hash': [logdict['hash']]
+            }
+            
         df = pd.DataFrame(log)
         f = open(logfile, 'a')
         size = f.tell()
@@ -86,10 +99,12 @@ def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False
     # connect to mongodb to get student name from IP
     conn = None
     try:
-        conn = pymongo.MongoClient(mongo_url)
+        conn = pymongo.MongoClient(mongo_url, serverSelectionTimeoutMS=3000)
+        conn.server_info()
         print('[-] connected to mongodb')
     except Exception as arg:
         printerr(f'[*] error connecting to database: {mongo_url}:', arg)
+        conn = None
 
     try:
         logfd = open(logfile, 'a')
