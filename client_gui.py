@@ -15,24 +15,30 @@ class MyWidget(QtWidgets.QWidget):
     def set_list(self):
         ret = QtWidgets.QFileDialog.getOpenFileName(self, 'Select File')
         self.listfile = ret[0]
-        print(f"system list file: '{self.listfile}'")
+        s = f"system list file: '{self.listfile}'"
+        print(s)
+        self.text.append('[*] set ' + s)
 
     @QtCore.Slot()
     def set_qdir(self):
         ret = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Directory')
         self.qdir = ret
-        print(f"question dir: '{self.qdir}'")
+        s = f"question dir: '{self.qdir}'"
+        print(s)
+        self.text.append('[*] set ' + s)
 
     @QtCore.Slot()
     def set_logfile(self):
         ret = QtWidgets.QFileDialog.getSaveFileName(self, 'Select Log file')
         self.logfile = ret[0]
-        print(f"logfile: '{self.logfile}'")
+        s = f"logfile: '{self.logfile}'"
+        print(s)
+        self.text.append('[*] set ' + s)
 
     def handle_stdout(self):
         print('handling output')
         data = self.p.readAllStandardOutput()
-        stdout = bytes(data).decode('utf8')
+        stdout = bytes(data).strip().decode('utf8')
         self.text.append(stdout)
         print(stdout)
         print('handled output')
@@ -54,11 +60,9 @@ class MyWidget(QtWidgets.QWidget):
             print('Starting')
             self.text.append('Starting\n'
                              '========')
-
     def proc_finished(self):
         self.text.append('\n========\n'
                          'Finished')
-        self.p = None
 
     @QtCore.Slot()
     def runclient(self):
@@ -71,8 +75,13 @@ class MyWidget(QtWidgets.QWidget):
             cmd = ['./client.py', '-v', '-l', self.listfile, '-q', self.qdir,
                    '-L', self.logfile]
             print('cmd:', cmd)
-            self.text.append('command: ' + ' '.join(cmd))
+            self.text.append('\n========================================\n' +
+                             'running command: ' + ' '.join(cmd))
             self.p.start('python3', cmd)
+
+    @QtCore.Slot()
+    def clear_text(self):
+        self.text.clear()
 
     def __init__(self, parent=None):
         super(MyWidget, self).__init__(parent)
@@ -81,6 +90,7 @@ class MyWidget(QtWidgets.QWidget):
         self.choose_qdir = QtWidgets.QPushButton('Choose Question Directory')
         self.choose_logf = QtWidgets.QPushButton('Choose Log File')
         self.send        = QtWidgets.QPushButton('Send')
+        self.clearbutton = QtWidgets.QPushButton('Clear Screen')
 
         self.text = QtWidgets.QTextEdit('')
         self.text.setReadOnly(True)
@@ -91,11 +101,13 @@ class MyWidget(QtWidgets.QWidget):
         self.layout.addWidget(self.choose_qdir)
         self.layout.addWidget(self.choose_logf)
         self.layout.addWidget(self.send)
+        self.layout.addWidget(self.clearbutton)
 
         self.choose_list.clicked.connect(self.set_list)
         self.choose_qdir.clicked.connect(self.set_qdir)
         self.choose_logf.clicked.connect(self.set_logfile)
         self.send.clicked.connect(self.runclient)
+        self.clearbutton.clicked.connect(self.clear_text)
 
         self.listfile = myconstants.LISTFILE
         self.qdir = myconstants.QDIR
