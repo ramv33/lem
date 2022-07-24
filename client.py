@@ -114,7 +114,7 @@ def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False
             s.close()
         except Exception as arg:
             failed += f'{i}: {arg}\n'
-            printerr(f'\tFAILED: {arg}')
+            printerr(f'\tFAILED: {arg}', flush=True)
 
     if sent != '':
         print('\nSummary\n'
