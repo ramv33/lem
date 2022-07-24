@@ -116,11 +116,13 @@ def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False
             failed += f'{i}: {arg}\n'
             printerr(f'\tFAILED: {arg}')
 
-    print('\nSummary\n'
-          '=======\n'
-          'SUCCESS\n'
-          '=======\n', sent, sep='', flush=True)
-    printerr('FAILED\n=======\n', failed, sep='')
+    if sent != '':
+        print('\nSummary\n'
+              '=======\n'
+              'SUCCESS\n'
+              '=======\n', sent, sep='', flush=True)
+    if failed != '':
+        printerr('FAILED\n=======\n', failed, sep='')
     print()
 
 def argparser():
