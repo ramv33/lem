@@ -98,18 +98,30 @@ def send_questions(order, port, qdir, logfile=myconstants.LOGFILE, verbose=False
         print("error opening'", logfile, ":", arg)
         sys.exit(2)
 
+    sent = ''
+    failed = ''
     for i in order.keys():
         try:
+            print(f'[-] trying {i}:{port}', flush=True)
             s = connect_server(i, port)
-            print(f'[+] connected to {i}:{port}', flush=True)
+            print('\tSUCCESS', flush=True)
             qpath = os.path.join(qdir, order[i])
             filesig = send_file(s, qpath)
             # todo: write log as a csv file
             logdict = {'sys': i, 'q': order[i], 'hash': filesig, 'qpath': qpath}
+            sent += f"System: {logdict['sys']} Question: {logdict['q']}\n"
             logwrite(logfile, logdict, conn)
             s.close()
-        except:
-            printerr(f'[*] connection to {i}:{port} failed')
+        except Exception as arg:
+            failed += f'{i}: {arg}\n'
+            printerr(f'\tFAILED: {arg}')
+
+    print('\nSummary\n'
+          '=======\n'
+          'SUCCESS\n'
+          '=======\n', sent, sep='', flush=True)
+    printerr('FAILED\n=======\n', failed, sep='')
+    print()
 
 def argparser():
     parser = argparse.ArgumentParser()
